@@ -30,7 +30,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.mount("/", StaticFiles(directory="src/frontend", html=True), name="frontend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -61,8 +60,11 @@ def check_rate_limit(client_ip: str):
 def health_check():
     return HealthResponse(status="ok", message="AI Prompt Analyzer is running 🚀")
 
+app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
+
+
 @app.get("/")
-def serve_frontend():
+def root():
     return FileResponse("src/frontend/index.html")
 @app.post("/analyze", response_model=AnalyzeResponse)
 def analyze_prompt(req: AnalyzeRequest, request: Request):
