@@ -56,12 +56,15 @@ def check_rate_limit(client_ip: str):
     _rate_limit[client_ip] = requests
 
 
-@app.get("/", response_model=HealthResponse)
-def health_check():
-    return HealthResponse(status="ok", message="AI Prompt Analyzer is running 🚀")
+# @app.get("/", response_model=HealthResponse)
+# def health_check():
+#     return HealthResponse(status="ok", message="AI Prompt Analyzer is running 🚀")
+
+# @app.get("/health")
+# def health():
+#     return {"status": "ok", "message": "running"}
 
 app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
-
 
 @app.get("/")
 def root():
