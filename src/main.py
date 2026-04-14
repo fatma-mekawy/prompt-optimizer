@@ -30,7 +30,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-#app.mount("/", StaticFiles(directory="src/frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="src/frontend", html=True), name="frontend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
