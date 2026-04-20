@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # Lazy-load the model so it doesn't block startup
 _model = None
-MODEL_SIZE = "tiny"   # tiny ~75MB, base ~145MB, small ~465MB
+MODEL_SIZE = "small"   # tiny ~75MB, base ~145MB, small ~465MB
 
 
 def _get_model():
