@@ -1326,17 +1326,28 @@
             transform: translateY(0);
         }
 
+        /* Updated scrollbar styles for better visibility */
         ::-webkit-scrollbar {
-            width: 5px;
+            width: 10px;
+            /* Increased width */
         }
 
         ::-webkit-scrollbar-track {
             background: var(--bg);
+            /* Keep background consistent */
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--surface3);
-            border-radius: 3px;
+            background: var(--text3);
+            /* Changed to a more visible color */
+            border-radius: 10px;
+            border: 2px solid var(--bg);
+            /* Adds padding effect around the thumb */
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+            /* Highlights when you hover over it */
         }
 
         @media(max-width:600px) {
