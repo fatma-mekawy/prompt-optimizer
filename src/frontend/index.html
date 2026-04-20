@@ -1326,28 +1326,28 @@
             transform: translateY(0);
         }
 
-        /* Updated scrollbar styles for better visibility */
+        /* --- UPDATED SCROLLBAR FOR VISIBILITY --- */
         ::-webkit-scrollbar {
             width: 10px;
-            /* Increased width */
+            /* Increased from 5px for better visibility */
         }
 
         ::-webkit-scrollbar-track {
             background: var(--bg);
-            /* Keep background consistent */
         }
 
         ::-webkit-scrollbar-thumb {
+            /* Using var(--text3) ensures it is dark in dark mode and 
+       sufficiently contrasty in light mode */
             background: var(--text3);
-            /* Changed to a more visible color */
             border-radius: 10px;
+            /* Adding a border creates a 'floating' effect that stands out more */
             border: 2px solid var(--bg);
-            /* Adds padding effect around the thumb */
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--accent);
-            /* Highlights when you hover over it */
+            /* Changes to blue when hovered */
         }
 
         @media(max-width:600px) {
