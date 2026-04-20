@@ -21,10 +21,16 @@ logger = logging.getLogger(__name__)
 
 import requests
 
-GROQ_API_KEY = "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"
+# GROQ_API_KEY = "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"
+
+# GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+import os
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY environment variable is not set")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-
 
 def call_llm(prompt: str):
     headers = {
