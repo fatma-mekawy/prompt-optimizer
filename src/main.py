@@ -129,7 +129,8 @@ async def analyze_voice(
     client_ip = request.client.host
     check_rate_limit(client_ip)
 
-    allowed_types = ["audio/wav", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/x-wav"]
+    allowed_types = ["audio/wav", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/x-wav",
+    "audio/webm" ]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail=f"Unsupported audio type: {file.content_type}")
 
