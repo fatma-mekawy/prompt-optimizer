@@ -1,1650 +1,896 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Promptimizer — AI Prompt Optimizer</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap"
-        rel="stylesheet" />
-    <style>
-        :root {
-            --bg: #06080f;
-            --bg2: #0a0d18;
-            --surface: #0e1220;
-            --surface2: #131829;
-            --surface3: #192035;
-            --border: rgba(92, 120, 255, 0.10);
-            --border2: rgba(92, 120, 255, 0.20);
-            --border3: rgba(92, 120, 255, 0.38);
-            --accent: #5c78ff;
-            --accent2: #3f5aff;
-            --accent-glow: rgba(92, 120, 255, 0.20);
-            --accent-dim: rgba(92, 120, 255, 0.07);
-            --violet: #a855f7;
-            --violet-dim: rgba(168, 85, 247, 0.10);
-            --teal: #2dd4bf;
-            --teal-dim: rgba(45, 212, 191, 0.10);
-            --green: #34d399;
-            --green-dim: rgba(52, 211, 153, 0.10);
-            --red: #f87171;
-            --red-dim: rgba(248, 113, 113, 0.10);
-            --amber: #fbbf24;
-            --amber-dim: rgba(251, 191, 36, 0.10);
-            --text: #eef0ff;
-            --text2: #7d8ab8;
-            --text3: #3d4566;
-            --radius: 10px;
-            --radius-sm: 6px;
-            --radius-lg: 14px;
-            --radius-xl: 20px;
-        }
-
-        [data-theme="light"] {
-            --bg: #f2f4fc;
-            --bg2: #e8ecf8;
-            --surface: #ffffff;
-            --surface2: #f4f6ff;
-            --surface3: #eaeeff;
-            --border: rgba(70, 90, 200, 0.12);
-            --border2: rgba(70, 90, 200, 0.22);
-            --border3: rgba(70, 90, 200, 0.40);
-            --accent: #4455ee;
-            --accent2: #3344dd;
-            --accent-glow: rgba(68, 85, 238, 0.15);
-            --accent-dim: rgba(68, 85, 238, 0.06);
-            --violet: #9333ea;
-            --violet-dim: rgba(147, 51, 234, 0.08);
-            --teal: #0d9488;
-            --teal-dim: rgba(13, 148, 136, 0.08);
-            --green: #059669;
-            --green-dim: rgba(5, 150, 105, 0.08);
-            --red: #dc2626;
-            --red-dim: rgba(220, 38, 38, 0.08);
-            --amber: #d97706;
-            --amber-dim: rgba(217, 119, 6, 0.08);
-            --text: #0c1030;
-            --text2: #3a4470;
-            --text3: #8090c0;
-        }
-
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0
-        }
-
-        html {
-            scroll-behavior: smooth
-        }
-
-        body {
-            font-family: 'Syne', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background .3s, color .3s;
-        }
-
-        /* ─── NOISE TEXTURE ─── */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 0;
-            opacity: .5;
-        }
-
-        /* ─── GRID ─── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(var(--border) 1px, transparent 1px),
-                linear-gradient(90deg, var(--border) 1px, transparent 1px);
-            background-size: 56px 56px;
-            pointer-events: none;
-            z-index: 0;
-            opacity: .6;
-        }
-
-        /* ─── ORB GLOWS ─── */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            filter: blur(100px);
-            animation: orbFloat 10s ease-in-out infinite;
-        }
-
-        .orb1 {
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(92, 120, 255, .28), transparent);
-            top: -180px;
-            left: -120px;
-        }
-
-        .orb2 {
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(168, 85, 247, .18), transparent);
-            bottom: -120px;
-            right: -100px;
-            animation-delay: -5s;
-        }
-
-        .orb3 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(45, 212, 191, .12), transparent);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -2.5s;
-        }
-
-        [data-theme="light"] .orb {
-            filter: blur(120px);
-            opacity: .5;
-        }
-
-        @keyframes orbFloat {
-
-            0%,
-            100% {
-                transform: translateY(0) scale(1)
-            }
-
-            50% {
-                transform: translateY(-28px) scale(1.04)
-            }
-        }
-
-        .orb3 {
-            animation: orbFloat 14s ease-in-out -2.5s infinite;
-        }
-
-        /* ─── HEADER ─── */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 36px;
-            background: rgba(6, 8, 15, .82);
-            backdrop-filter: blur(24px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        [data-theme="light"] header {
-            background: rgba(242, 244, 252, .85);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            text-decoration: none;
-        }
-
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent), var(--violet));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px var(--accent-glow);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .logo-icon::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, .22), transparent);
-        }
-
-        .logo-icon svg {
-            width: 17px;
-            height: 17px;
-            color: #fff;
-            position: relative;
-            z-index: 1;
-        }
-
-        .logo-name {
-            font-size: 17px;
-            font-weight: 800;
-            letter-spacing: -.03em;
-            color: var(--text);
-        }
-
-        .logo-name em {
-            font-style: normal;
-            background: linear-gradient(90deg, var(--accent), var(--violet));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .theme-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border2);
-            background: var(--surface);
-            color: var(--text2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all .2s;
-        }
-
-        .theme-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-dim);
-        }
-
-        /* ─── MAIN ─── */
-        .main {
-            position: relative;
-            z-index: 1;
-            max-width: 840px;
-            margin: 0 auto;
-            padding: 44px 24px 72px;
-        }
-
-        /* ─── HERO ─── */
-        .hero {
-            text-align: center;
-            margin-bottom: 44px;
-            animation: riseIn .7s cubic-bezier(.22, 1, .36, 1) both;
-        }
-
-        .hero-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            font-weight: 400;
-            letter-spacing: .1em;
-            color: var(--teal);
-            background: var(--teal-dim);
-            border: 1px solid rgba(45, 212, 191, .2);
-            padding: 5px 14px;
-            border-radius: 40px;
-            margin-bottom: 20px;
-        }
-
-        .hero-pill-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--teal);
-            animation: blink 2s infinite;
-        }
-
-        .hero h1 {
-            font-size: clamp(30px, 6vw, 52px);
-            font-weight: 800;
-            letter-spacing: -.04em;
-            line-height: 1.08;
-            margin-bottom: 14px;
-        }
-
-        .grad-text {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--violet) 55%, var(--teal) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-sub {
-            font-size: 15px;
-            font-weight: 400;
-            color: var(--text2);
-            max-width: 480px;
-            margin: 0 auto;
-            line-height: 1.65;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        /* ─── FEATURE CHIPS ─── */
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 7px;
-            justify-content: center;
-            margin: 22px 0 36px;
-            animation: riseIn .7s cubic-bezier(.22, 1, .36, 1) .08s both;
-        }
-
-        .chip {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 40px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-size: 12px;
-            color: var(--text3);
-            transition: all .22s;
-            cursor: default;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .chip:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-dim);
-            transform: translateY(-1px);
-        }
-
-        .chip svg {
-            width: 11px;
-            height: 11px;
-            opacity: .7;
-        }
-
-        /* ─── INPUT WRAP ─── */
-        .input-wrap {
-            animation: riseIn .7s cubic-bezier(.22, 1, .36, 1) .14s both;
-        }
-
-        .input-card {
-            background: var(--surface);
-            border: 1px solid var(--border2);
-            border-radius: var(--radius-xl);
-            overflow: hidden;
-            transition: border-color .3s, box-shadow .3s;
-            position: relative;
-        }
-
-        .input-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: var(--radius-xl);
-            background: linear-gradient(135deg, rgba(92, 120, 255, .04), transparent, rgba(168, 85, 247, .04));
-            opacity: 0;
-            transition: opacity .35s;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .input-card:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow), 0 24px 64px rgba(0, 0, 0, .35);
-        }
-
-        .input-card:focus-within::before {
-            opacity: 1;
-        }
-
-        .scan-line {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent), var(--violet), transparent);
-            top: 0;
-            animation: scanDown 2.2s ease-in-out infinite;
-            display: none;
-            z-index: 2;
-        }
-
-        .input-card.scanning .scan-line {
-            display: block;
-        }
-
-        @keyframes scanDown {
-            0% {
-                top: 0;
-                opacity: 1
-            }
-
-            100% {
-                top: 100%;
-                opacity: 0
-            }
-        }
-
-        .input-topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 18px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface2);
-            position: relative;
-            z-index: 1;
-        }
-
-        .input-lbl {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .1em;
-            color: var(--text3);
-        }
-
-        .char-ct {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--text3);
-            transition: color .2s;
-        }
-
-        .char-ct.warm {
-            color: var(--accent);
-        }
-
-        textarea#promptInput {
-            width: 100%;
-            border: none;
-            outline: none;
-            resize: none;
-            background: transparent;
-            color: var(--text);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13.5px;
-            line-height: 1.85;
-            padding: 20px;
-            min-height: 160px;
-            position: relative;
-            z-index: 1;
-        }
-
-        textarea#promptInput::placeholder {
-            color: var(--text3);
-        }
-
-        /* ─── QUALITY CHECKS ─── (now inside input-wrap, below textarea) */
-        .checks-section {
-            padding: 12px 18px 14px;
-            border-top: 1px solid var(--border);
-            background: var(--surface2);
-            position: relative;
-            z-index: 1;
-        }
-
-        .checks-label {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: .1em;
-            color: var(--text3);
-            margin-bottom: 8px;
-        }
-
-        .checks-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .check-pill {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 11px;
-            border-radius: 40px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-size: 11px;
-            color: var(--text3);
-            transition: all .25s;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .check-pill.pass {
-            border-color: rgba(52, 211, 153, .3);
-            background: var(--green-dim);
-            color: var(--green);
-        }
-
-        .check-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: currentColor;
-            opacity: .7;
-            transition: all .25s;
-        }
-
-        .input-bottombar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 18px;
-            border-top: 1px solid var(--border);
-            background: var(--surface2);
-            position: relative;
-            z-index: 1;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .clear-btn {
-            font-size: 12px;
-            color: var(--text3);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 7px 12px;
-            border-radius: var(--radius-sm);
-            transition: color .2s;
-            font-family: 'Syne', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .clear-btn:hover {
-            color: var(--red);
-        }
-
-        .optimize-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #fff;
-            border: none;
-            padding: 11px 26px;
-            border-radius: var(--radius);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Syne', sans-serif;
-            letter-spacing: -.01em;
-            position: relative;
-            overflow: hidden;
-            transition: all .22s;
-        }
-
-        .optimize-btn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, .18), transparent);
-            opacity: 0;
-            transition: opacity .22s;
-        }
-
-        .optimize-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px var(--accent-glow);
-        }
-
-        .optimize-btn:hover::after {
-            opacity: 1;
-        }
-
-        .optimize-btn:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        .optimize-btn:disabled {
-            background: var(--surface3);
-            color: var(--text3);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .optimize-btn svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .btn-spin {
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255, 255, 255, .25);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin .65s linear infinite;
-            display: none;
-        }
-
-        /* ─── ERROR ─── */
-        .err-wrap {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: var(--red-dim);
-            border: 1px solid rgba(248, 113, 113, .25);
-            border-radius: var(--radius);
-            font-size: 13px;
-            color: var(--red);
-            margin-top: 12px;
-            animation: riseIn .3s ease;
-        }
-
-        .err-wrap.show {
-            display: flex;
-        }
-
-        /* ─── LOADING ─── */
-        .loading-box {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            padding: 44px 0;
-            text-align: center;
-        }
-
-        .loading-box.show {
-            display: flex;
-        }
-
-        .load-ring {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            border: 2px solid var(--border2);
-            border-top-color: var(--accent);
-            border-right-color: var(--violet);
-            animation: spin 1s linear infinite;
-        }
-
-        .load-text {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13px;
-            color: var(--text2);
-        }
-
-        .load-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .load-step {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--text3);
-            opacity: 0;
-            transition: all .4s;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-
-        .load-step::before {
-            content: '';
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: var(--accent);
-            flex-shrink: 0;
-        }
-
-        .load-step.active {
-            opacity: 1;
-            color: var(--accent);
-        }
-
-        .load-step.done {
-            opacity: .45;
-            color: var(--green);
-        }
-
-        .load-step.done::before {
-            background: var(--green);
-        }
-
-        /* ─── RESULTS ─── */
-        .results-section {
-            display: none;
-            animation: riseIn .5s cubic-bezier(.22, 1, .36, 1) both;
-        }
-
-        .results-section.show {
-            display: block;
-        }
-
-        /* ─── OPTIMIZED PROMPT CARD ─── */
-        .opt-card {
-            background: var(--surface);
-            border: 1px solid rgba(52, 211, 153, .22);
-            border-radius: var(--radius-xl);
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .opt-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--green), var(--teal), var(--accent), var(--violet));
-        }
-
-        .opt-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px 14px;
-            padding-top: 17px;
-            background: var(--surface2);
-            border-bottom: 1px solid rgba(52, 211, 153, .12);
-        }
-
-        .opt-header-left {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-        }
-
-        .opt-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--green);
-            letter-spacing: .05em;
-            text-transform: uppercase;
-        }
-
-        .opt-badge-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--green);
-            animation: blink 2.5s infinite;
-        }
-
-        .opt-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .act-btn {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
-            padding: 6px 13px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border2);
-            background: var(--surface);
-            color: var(--text2);
-            cursor: pointer;
-            transition: all .2s;
-            font-family: 'Syne', sans-serif;
-        }
-
-        .act-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-dim);
-        }
-
-        .act-btn.use {
-            background: var(--green-dim);
-            border-color: rgba(52, 211, 153, .3);
-            color: var(--green);
-        }
-
-        .act-btn.use:hover {
-            background: var(--green);
-            color: #071a10;
-            border-color: var(--green);
-        }
-
-        .act-btn svg {
-            width: 12px;
-            height: 12px;
-        }
-
-        .opt-body {
-            padding: 22px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13.5px;
-            line-height: 1.85;
-            color: var(--text);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        /* ─── DIVIDER ─── */
-        .section-divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 28px 0 20px;
-        }
-
-        .section-divider::before,
-        .section-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border2), transparent);
-        }
-
-        .section-divider-label {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--text3);
-            text-transform: uppercase;
-            letter-spacing: .12em;
-            white-space: nowrap;
-            padding: 5px 14px;
-            border: 1px solid var(--border);
-            border-radius: 40px;
-            background: var(--surface);
-        }
-
-        /* ─── INJECTION BADGE ─── */
-        .inj-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .inj-badge.safe {
-            background: var(--green-dim);
-            color: var(--green);
-            border: 1px solid rgba(52, 211, 153, .2);
-        }
-
-        .inj-badge.danger {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(248, 113, 113, .2);
-        }
-
-        .inj-badge svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        /* ─── ANALYSIS GRID ─── */
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        @media(max-width:580px) {
-            .analysis-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .ana-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 18px;
-            transition: border-color .2s, transform .2s;
-        }
-
-        .ana-card:hover {
-            border-color: var(--border2);
-            transform: translateY(-2px);
-        }
-
-        .ana-head {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin-bottom: 13px;
-        }
-
-        .ana-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .ana-icon svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .ana-icon.red {
-            background: var(--red-dim);
-            color: var(--red);
-        }
-
-        .ana-icon.amber {
-            background: var(--amber-dim);
-            color: var(--amber);
-        }
-
-        .ana-icon.cyan {
-            background: var(--teal-dim);
-            color: var(--teal);
-        }
-
-        .ana-title {
-            font-size: 11px;
-            color: var(--text3);
-            font-family: 'IBM Plex Mono', monospace;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-        }
-
-        .tag-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-
-        .tag {
-            font-size: 11px;
-            padding: 4px 11px;
-            border-radius: 40px;
-            border: 1px solid var(--border);
-            background: var(--surface2);
-            color: var(--text2);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .tag.issue {
-            background: var(--red-dim);
-            color: var(--red);
-            border-color: rgba(248, 113, 113, .2);
-        }
-
-        .tag.sugg {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border-color: rgba(251, 191, 36, .2);
-        }
-
-        .steps-list {
-            list-style: none;
-            counter-reset: st;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .steps-list li {
-            counter-increment: st;
-            position: relative;
-            padding: 9px 13px 9px 36px;
-            background: var(--surface2);
-            border-radius: var(--radius-sm);
-            font-size: 12.5px;
-            color: var(--text2);
-            line-height: 1.5;
-            border: 1px solid var(--border);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .steps-list li::before {
-            content: counter(st);
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--violet));
-            color: #fff;
-            font-size: 10px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ─── DIFF ─── */
-        .diff-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 14px;
-        }
-
-        @media(max-width:580px) {
-            .diff-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .diff-pane {
-            background: var(--surface2);
-            border-radius: var(--radius);
-            padding: 14px;
-            border: 1px solid var(--border);
-        }
-
-        .diff-lbl {
-            font-size: 10px;
-            font-family: 'IBM Plex Mono', monospace;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            margin-bottom: 9px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .diff-lbl.before {
-            color: var(--red);
-        }
-
-        .diff-lbl.after {
-            color: var(--green);
-        }
-
-        .diff-text {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            line-height: 1.65;
-            color: var(--text2);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        /* ─── FOOTER ─── */
-        footer {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            padding: 22px;
-            border-top: 1px solid var(--border);
-            font-size: 12px;
-            color: var(--text3);
-            margin-top: 12px;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        footer a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color .2s;
-        }
-
-        footer a:hover {
-            color: var(--violet);
-        }
-
-        footer .sep {
-            margin: 0 8px;
-            opacity: .35;
-        }
-
-        /* ─── ANIMATIONS ─── */
-        @keyframes riseIn {
-            from {
-                opacity: 0;
-                transform: translateY(18px)
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0)
-            }
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg)
-            }
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: .3
-            }
-        }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity .5s ease, transform .5s ease;
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--surface3);
-            border-radius: 3px;
-        }
-
-        @media(max-width:600px) {
-            header {
-                padding: 12px 18px;
-            }
-
-            .main {
-                padding: 28px 14px 56px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Promptimizer — AI Prompt Optimizer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:           #06080f;
+      --bg2:          #0a0d18;
+      --surface:      #0e1220;
+      --surface2:     #131829;
+      --surface3:     #192035;
+      --border:       rgba(92,120,255,0.10);
+      --border2:      rgba(92,120,255,0.20);
+      --border3:      rgba(92,120,255,0.38);
+      --accent:       #5c78ff;
+      --accent2:      #3f5aff;
+      --accent-glow:  rgba(92,120,255,0.22);
+      --accent-dim:   rgba(92,120,255,0.07);
+      --violet:       #a855f7;
+      --violet-dim:   rgba(168,85,247,0.10);
+      --teal:         #2dd4bf;
+      --teal-dim:     rgba(45,212,191,0.10);
+      --green:        #34d399;
+      --green-dim:    rgba(52,211,153,0.10);
+      --red:          #f87171;
+      --red-dim:      rgba(248,113,113,0.10);
+      --amber:        #fbbf24;
+      --amber-dim:    rgba(251,191,36,0.10);
+      --text:         #eef0ff;
+      --text2:        #7d8ab8;
+      --text3:        #3d4566;
+      --radius:       10px;
+      --radius-sm:    6px;
+      --radius-lg:    14px;
+      --radius-xl:    20px;
+    }
+    [data-theme="light"] {
+      --bg:           #f2f4fc;
+      --bg2:          #e8ecf8;
+      --surface:      #ffffff;
+      --surface2:     #f4f6ff;
+      --surface3:     #eaeeff;
+      --border:       rgba(70,90,200,0.12);
+      --border2:      rgba(70,90,200,0.22);
+      --border3:      rgba(70,90,200,0.40);
+      --accent:       #4455ee;
+      --accent2:      #3344dd;
+      --accent-glow:  rgba(68,85,238,0.15);
+      --accent-dim:   rgba(68,85,238,0.06);
+      --violet:       #9333ea;
+      --violet-dim:   rgba(147,51,234,0.08);
+      --teal:         #0d9488;
+      --teal-dim:     rgba(13,148,136,0.08);
+      --green:        #059669;
+      --green-dim:    rgba(5,150,105,0.08);
+      --red:          #dc2626;
+      --red-dim:      rgba(220,38,38,0.08);
+      --amber:        #d97706;
+      --amber-dim:    rgba(217,119,6,0.08);
+      --text:         #0c1030;
+      --text2:        #3a4470;
+      --text3:        #8090c0;
+    }
+
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:'DM Sans',sans-serif;
+      background:var(--bg); color:var(--text);
+      min-height:100vh; overflow-x:hidden;
+      transition:background .3s,color .3s;
+    }
+    body::after {
+      content:''; position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events:none; z-index:0; opacity:.45;
+    }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+      background-size:56px 56px; pointer-events:none; z-index:0; opacity:.6;
+    }
+
+    .orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(100px); animation:orbFloat 10s ease-in-out infinite; }
+    .orb1 { width:600px; height:600px; background:radial-gradient(circle,rgba(92,120,255,.26),transparent); top:-180px; left:-120px; }
+    .orb2 { width:500px; height:500px; background:radial-gradient(circle,rgba(168,85,247,.16),transparent); bottom:-120px; right:-100px; animation-delay:-5s; }
+    .orb3 { width:300px; height:300px; background:radial-gradient(circle,rgba(45,212,191,.11),transparent); top:50%; left:50%; animation-delay:-2.5s; }
+    [data-theme="light"] .orb { opacity:.45; }
+    @keyframes orbFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-28px) scale(1.04)} }
+
+    /* HEADER */
+    header {
+      position:sticky; top:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 36px;
+      background:rgba(6,8,15,.84); backdrop-filter:blur(24px);
+      border-bottom:1px solid var(--border);
+    }
+    [data-theme="light"] header { background:rgba(242,244,252,.86); }
+    .logo { display:flex; align-items:center; gap:11px; text-decoration:none; }
+    .logo-icon {
+      width:36px; height:36px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--violet));
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 0 20px var(--accent-glow); position:relative; overflow:hidden;
+    }
+    .logo-icon::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.22),transparent); }
+    .logo-icon svg { width:17px; height:17px; color:#fff; position:relative; z-index:1; }
+    .logo-name { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text); }
+    .logo-name em { font-style:normal; background:linear-gradient(90deg,var(--accent),var(--violet)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .header-right { display:flex; align-items:center; gap:8px; }
+    .theme-btn {
+      width:34px; height:34px; border-radius:var(--radius-sm);
+      border:1px solid var(--border2); background:var(--surface);
+      color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s;
+    }
+    .theme-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+    /* MAIN */
+    .main { position:relative; z-index:1; max-width:840px; margin:0 auto; padding:48px 24px 72px; }
+
+    /* HERO */
+    .hero { text-align:center; margin-bottom:44px; animation:riseIn .7s cubic-bezier(.22,1,.36,1) both; }
+    .hero h1 { font-size:clamp(30px,6vw,52px); font-weight:700; letter-spacing:-.035em; line-height:1.1; margin-bottom:14px; }
+    .grad-text { background:linear-gradient(135deg,var(--accent) 0%,var(--violet) 55%,var(--teal) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hero-sub { font-size:15.5px; font-weight:400; color:var(--text2); max-width:500px; margin:0 auto; line-height:1.65; }
+
+    /* CHIPS */
+    .chips { display:flex; flex-wrap:wrap; gap:7px; justify-content:center; margin:22px 0 36px; animation:riseIn .7s cubic-bezier(.22,1,.36,1) .08s both; }
+    .chip { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:40px; border:1px solid var(--border); background:var(--surface); font-size:12.5px; color:var(--text3); transition:all .22s; cursor:default; }
+    .chip:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); transform:translateY(-1px); }
+    .chip svg { width:11px; height:11px; opacity:.7; }
+
+    /* MODE TABS */
+    .input-wrap { animation:riseIn .7s cubic-bezier(.22,1,.36,1) .14s both; }
+    .mode-tabs { display:flex; gap:6px; margin-bottom:10px; }
+    .mode-tab {
+      display:flex; align-items:center; gap:7px;
+      padding:8px 18px; border-radius:var(--radius);
+      border:1px solid var(--border2); background:var(--surface);
+      font-size:13px; font-weight:500; color:var(--text3);
+      cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif;
+    }
+    .mode-tab svg { width:14px; height:14px; }
+    .mode-tab:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+    .mode-tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; color:#fff; box-shadow:0 4px 16px var(--accent-glow); }
+
+    /* INPUT CARD */
+    .input-card {
+      background:var(--surface); border:1px solid var(--border2);
+      border-radius:var(--radius-xl); overflow:hidden;
+      transition:border-color .3s,box-shadow .3s; position:relative;
+    }
+    .input-card::before {
+      content:''; position:absolute; inset:0; border-radius:var(--radius-xl);
+      background:linear-gradient(135deg,rgba(92,120,255,.04),transparent,rgba(168,85,247,.04));
+      opacity:0; transition:opacity .35s; pointer-events:none; z-index:0;
+    }
+    .input-card:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow),0 24px 64px rgba(0,0,0,.32); }
+    .input-card:focus-within::before { opacity:1; }
+    .scan-line {
+      position:absolute; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,transparent,var(--accent),var(--violet),transparent);
+      top:0; animation:scanDown 2.2s ease-in-out infinite; display:none; z-index:2;
+    }
+    .input-card.scanning .scan-line { display:block; }
+    @keyframes scanDown { 0%{top:0;opacity:1} 100%{top:100%;opacity:0} }
+
+    .input-topbar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 18px; border-bottom:1px solid var(--border);
+      background:var(--surface2); position:relative; z-index:1;
+    }
+    .input-lbl { font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text3); }
+    .char-ct { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); transition:color .2s; }
+    .char-ct.warm { color:var(--accent); }
+
+    /* TEXT PANEL */
+    .panel-text { display:block; }
+    .panel-voice { display:none; }
+    textarea#promptInput {
+      width:100%; border:none; outline:none; resize:none;
+      background:transparent; color:var(--text);
+      font-family:'DM Mono',monospace; font-size:13.5px; line-height:1.85;
+      padding:20px; min-height:160px; position:relative; z-index:1;
+    }
+    textarea#promptInput::placeholder { color:var(--text3); }
+
+    /* QUALITY CHECKS */
+    .checks-section { padding:12px 18px 14px; border-top:1px solid var(--border); background:var(--surface2); position:relative; z-index:1; }
+    .checks-label { font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text3); margin-bottom:8px; }
+    .checks-row { display:flex; flex-wrap:wrap; gap:6px; }
+    .check-pill { display:flex; align-items:center; gap:5px; padding:4px 11px; border-radius:40px; border:1px solid var(--border); background:var(--surface); font-size:11px; color:var(--text3); transition:all .25s; font-family:'DM Mono',monospace; }
+    .check-pill.pass { border-color:rgba(52,211,153,.3); background:var(--green-dim); color:var(--green); }
+    .check-dot { width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; }
+
+    /* VOICE PANEL */
+    .voice-panel { display:flex; flex-direction:column; align-items:center; gap:18px; padding:36px 24px; position:relative; z-index:1; }
+
+    .mic-btn {
+      width:80px; height:80px; border-radius:50%;
+      border:2px solid var(--border2); background:var(--surface2);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:all .25s; outline:none;
+    }
+    .mic-btn svg { width:30px; height:30px; color:var(--text2); transition:color .25s; pointer-events:none; }
+    .mic-btn:hover { border-color:var(--accent); background:var(--accent-dim); }
+    .mic-btn:hover svg { color:var(--accent); }
+    .mic-btn.recording {
+      border-color:var(--red); background:var(--red-dim);
+      animation:micPulse 1.4s ease-in-out infinite;
+    }
+    .mic-btn.recording svg { color:var(--red); }
+    @keyframes micPulse {
+      0%,100% { box-shadow:0 0 0 8px rgba(248,113,113,.12),0 0 0 16px rgba(248,113,113,.05); }
+      50%      { box-shadow:0 0 0 12px rgba(248,113,113,.18),0 0 0 24px rgba(248,113,113,.07); }
+    }
+
+    .voice-hint { font-size:13px; color:var(--text2); text-align:center; line-height:1.6; }
+    .voice-hint strong { color:var(--text); font-weight:600; }
+
+    .waveform { display:none; align-items:center; gap:3px; height:36px; }
+    .waveform.active { display:flex; }
+    .wave-bar { width:3px; border-radius:3px; background:var(--accent); animation:waveBounce .6s ease-in-out infinite; height:6px; }
+    .wave-bar:nth-child(2){animation-delay:.08s}
+    .wave-bar:nth-child(3){animation-delay:.16s}
+    .wave-bar:nth-child(4){animation-delay:.24s}
+    .wave-bar:nth-child(5){animation-delay:.32s}
+    .wave-bar:nth-child(6){animation-delay:.40s}
+    .wave-bar:nth-child(7){animation-delay:.48s}
+    @keyframes waveBounce { 0%,100%{height:6px} 50%{height:28px} }
+
+    .rec-timer { font-family:'DM Mono',monospace; font-size:13px; color:var(--red); display:none; }
+    .rec-timer.active { display:block; }
+
+    .audio-preview { display:none; width:100%; }
+    .audio-preview.show { display:block; }
+    .audio-preview audio { width:100%; height:36px; }
+
+    .transcribed-label { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text3); margin-bottom:6px; font-family:'DM Mono',monospace; display:none; }
+    .transcribed-box { width:100%; background:var(--surface); border:1px solid rgba(45,212,191,.25); border-radius:var(--radius); padding:14px 16px; font-family:'DM Mono',monospace; font-size:13px; color:var(--teal); line-height:1.7; display:none; }
+
+    /* BOTTOM BAR */
+    .input-bottombar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 18px; border-top:1px solid var(--border);
+      background:var(--surface2); position:relative; z-index:1;
+      flex-wrap:wrap; gap:8px;
+    }
+    .clear-btn { font-size:12.5px; color:var(--text3); background:none; border:none; cursor:pointer; padding:7px 12px; border-radius:var(--radius-sm); transition:color .2s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:5px; }
+    .clear-btn:hover { color:var(--red); }
+    .optimize-btn {
+      display:flex; align-items:center; gap:8px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff; border:none; padding:11px 26px; border-radius:var(--radius);
+      font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif;
+      letter-spacing:-.01em; position:relative; overflow:hidden; transition:all .22s;
+    }
+    .optimize-btn::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.18),transparent); opacity:0; transition:opacity .22s; }
+    .optimize-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px var(--accent-glow); }
+    .optimize-btn:hover::after { opacity:1; }
+    .optimize-btn:active { transform:translateY(0); box-shadow:none; }
+    .optimize-btn:disabled { background:var(--surface3); color:var(--text3); cursor:not-allowed; transform:none; box-shadow:none; }
+    .optimize-btn svg { width:14px; height:14px; }
+    .btn-spin { width:14px; height:14px; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; border-radius:50%; animation:spin .65s linear infinite; display:none; }
+
+    /* ERROR */
+    .err-wrap { display:none; align-items:center; gap:8px; padding:12px 16px; background:var(--red-dim); border:1px solid rgba(248,113,113,.25); border-radius:var(--radius); font-size:13px; color:var(--red); margin-top:12px; animation:riseIn .3s ease; }
+    .err-wrap.show { display:flex; }
+
+    /* LOADING */
+    .loading-box { display:none; flex-direction:column; align-items:center; gap:16px; padding:44px 0; text-align:center; }
+    .loading-box.show { display:flex; }
+    .load-ring { width:54px; height:54px; border-radius:50%; border:2px solid var(--border2); border-top-color:var(--accent); border-right-color:var(--violet); animation:spin 1s linear infinite; }
+    .load-text { font-family:'DM Mono',monospace; font-size:13px; color:var(--text2); }
+    .load-steps { display:flex; flex-direction:column; gap:6px; align-items:center; }
+    .load-step { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); opacity:0; transition:all .4s; display:flex; align-items:center; gap:7px; }
+    .load-step::before { content:''; width:4px; height:4px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+    .load-step.active { opacity:1; color:var(--accent); }
+    .load-step.done { opacity:.45; color:var(--green); }
+    .load-step.done::before { background:var(--green); }
+
+    /* RESULTS */
+    .results-section { display:none; animation:riseIn .5s cubic-bezier(.22,1,.36,1) both; }
+    .results-section.show { display:block; }
+
+    /* TRANSCRIPTION NOTICE */
+    .transcription-notice { display:none; align-items:flex-start; gap:10px; padding:13px 16px; background:var(--teal-dim); border:1px solid rgba(45,212,191,.22); border-radius:var(--radius); margin-bottom:16px; }
+    .transcription-notice.show { display:flex; }
+    .transcription-notice svg { width:15px; height:15px; color:var(--teal); flex-shrink:0; margin-top:1px; }
+    .transcription-notice-label { font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--teal); margin-bottom:4px; }
+    .transcription-notice-text { font-size:13px; color:var(--text2); line-height:1.5; }
+
+    /* OPTIMIZED CARD */
+    .opt-card { background:var(--surface); border:1px solid rgba(52,211,153,.22); border-radius:var(--radius-xl); overflow:hidden; position:relative; margin-bottom:20px; }
+    .opt-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--green),var(--teal),var(--accent),var(--violet)); }
+    .opt-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; padding-top:17px; background:var(--surface2); border-bottom:1px solid rgba(52,211,153,.12); }
+    .opt-badge { display:inline-flex; align-items:center; gap:7px; font-family:'DM Mono',monospace; font-size:11px; color:var(--green); letter-spacing:.05em; text-transform:uppercase; }
+    .opt-badge-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 2.5s infinite; }
+    .opt-actions { display:flex; gap:6px; }
+    .act-btn { display:flex; align-items:center; gap:5px; font-size:12px; padding:6px 13px; border-radius:var(--radius-sm); border:1px solid var(--border2); background:var(--surface); color:var(--text2); cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+    .act-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+    .act-btn.use { background:var(--green-dim); border-color:rgba(52,211,153,.3); color:var(--green); }
+    .act-btn.use:hover { background:var(--green); color:#071a10; border-color:var(--green); }
+    .act-btn svg { width:12px; height:12px; }
+    .opt-body { padding:22px; font-family:'DM Mono',monospace; font-size:13.5px; line-height:1.85; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+
+    /* SECTION DIVIDER */
+    .section-divider { display:flex; align-items:center; gap:12px; margin:30px 0 20px; }
+    .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--border2),transparent); }
+    .section-divider-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.12em; white-space:nowrap; padding:5px 14px; border:1px solid var(--border); border-radius:40px; background:var(--surface); }
+
+    /* INJECTION BADGE */
+    .inj-badge { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border-radius:var(--radius-sm); font-size:13px; font-weight:500; margin-bottom:16px; font-family:'DM Mono',monospace; }
+    .inj-badge.safe { background:var(--green-dim); color:var(--green); border:1px solid rgba(52,211,153,.2); }
+    .inj-badge.danger { background:var(--red-dim); color:var(--red); border:1px solid rgba(248,113,113,.2); }
+    .inj-badge svg { width:14px; height:14px; }
+
+    /* ANALYSIS GRID */
+    .analysis-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:580px){ .analysis-grid{grid-template-columns:1fr} }
+    .ana-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px; transition:border-color .2s,transform .2s; }
+    .ana-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+    .ana-head { display:flex; align-items:center; gap:9px; margin-bottom:13px; }
+    .ana-icon { width:30px; height:30px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ana-icon svg { width:14px; height:14px; }
+    .ana-icon.red   { background:var(--red-dim);   color:var(--red); }
+    .ana-icon.amber { background:var(--amber-dim); color:var(--amber); }
+    .ana-icon.cyan  { background:var(--teal-dim);  color:var(--teal); }
+    .ana-title { font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+    .tag-wrap { display:flex; flex-wrap:wrap; gap:5px; }
+    .tag { font-size:11.5px; padding:4px 11px; border-radius:40px; border:1px solid var(--border); background:var(--surface2); color:var(--text2); font-family:'DM Mono',monospace; }
+    .tag.issue { background:var(--red-dim);   color:var(--red);   border-color:rgba(248,113,113,.2); }
+    .tag.sugg  { background:var(--amber-dim); color:var(--amber); border-color:rgba(251,191,36,.2); }
+    .steps-list { list-style:none; counter-reset:st; display:flex; flex-direction:column; gap:8px; }
+    .steps-list li { counter-increment:st; position:relative; padding:9px 13px 9px 36px; background:var(--surface2); border-radius:var(--radius-sm); font-size:12.5px; color:var(--text2); line-height:1.5; border:1px solid var(--border); font-family:'DM Mono',monospace; }
+    .steps-list li::before { content:counter(st); position:absolute; left:10px; top:50%; transform:translateY(-50%); width:18px; height:18px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--violet)); color:#fff; font-size:10px; font-weight:500; display:flex; align-items:center; justify-content:center; }
+
+    /* FOOTER */
+    footer { position:relative; z-index:1; text-align:center; padding:22px; border-top:1px solid var(--border); font-size:12px; color:var(--text3); margin-top:12px; font-family:'DM Mono',monospace; }
+    footer a { color:var(--accent); text-decoration:none; transition:color .2s; }
+    footer a:hover { color:var(--violet); }
+    footer .sep { margin:0 8px; opacity:.35; }
+
+    /* ANIMATIONS */
+    @keyframes riseIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin   { to{transform:rotate(360deg)} }
+    @keyframes blink  { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .reveal { opacity:0; transform:translateY(10px); transition:opacity .5s ease,transform .5s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
+
+    @media(max-width:600px){
+      header { padding:12px 18px; }
+      .main  { padding:28px 14px 56px; }
+    }
+  </style>
 </head>
-
 <body>
 
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-    <div class="orb orb3"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
 
-    <!-- ─── HEADER ─── -->
-    <header>
-        <a class="logo" href="#">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                </svg>
-            </div>
-            <span class="logo-name">Prompti<em>mizer</em></span>
-        </a>
-        <div class="header-right">
-            <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
-                <svg id="themeIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" width="15" height="15">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-            </button>
-        </div>
-    </header>
-
-    <div class="main">
-
-        <!-- ─── HERO ─── -->
-        <div class="hero">
-            <div class="hero-pill">
-                <span class="hero-pill-dot"></span>
-                AI-powered prompt engineering
-            </div>
-            <h1>Craft <span class="grad-text">Smarter Prompts,</span><br>Get Better Results</h1>
-            <p class="hero-sub">Paste any rough prompt and watch it transform into a precision-engineered instruction
-                that unlocks the full potential of any AI model.</p>
-        </div>
-
-        <!-- ─── FEATURE CHIPS ─── -->
-        <div class="chips">
-            <div class="chip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                </svg>
-                Role &amp; persona
-            </div>
-            <div class="chip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <polyline points="9 11 12 14 22 4" />
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-                Clear objective
-            </div>
-            <div class="chip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M3 9h18M9 21V9" />
-                </svg>
-                Output format
-            </div>
-            <div class="chip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                Tone &amp; style
-            </div>
-            <div class="chip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                Injection check
-            </div>
-            <div class="chip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M12 2l3 6.5 7 1-5 4.9 1.2 7L12 18l-6.2 3.4L7 14.4 2 9.5l7-1z" />
-                </svg>
-                Chain-of-thought
-            </div>
-        </div>
-
-        <!-- ─── INPUT ─── -->
-        <div class="input-wrap">
-            <div class="input-card" id="inputCard">
-                <div class="scan-line"></div>
-                <div class="input-topbar">
-                    <span class="input-lbl">Raw prompt input</span>
-                    <span class="char-ct" id="charCt">0 chars</span>
-                </div>
-                <textarea id="promptInput"
-                    placeholder='e.g. "write a blog post about AI" — paste your rough prompt and watch it transform...'
-                    oninput="onInput(this)"></textarea>
-
-                <!-- Quality checks BELOW the textarea -->
-                <div class="checks-section">
-                    <div class="checks-label">Prompt quality signals</div>
-                    <div class="checks-row" id="checksRow"></div>
-                </div>
-
-                <div class="input-bottombar">
-                    <button class="clear-btn" onclick="clearAll()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" width="12" height="12">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                        </svg>
-                        Clear
-                    </button>
-                    <button class="optimize-btn" id="forgeBtn" onclick="runOptimize()">
-                        <div class="btn-spin" id="btnSpin"></div>
-                        <svg id="boltIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                            stroke-linecap="round">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                        </svg>
-                        Optimize Prompt
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ─── ERROR ─── -->
-        <div class="err-wrap" id="errWrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                width="15" height="15">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span id="errMsg">Something went wrong.</span>
-        </div>
-
-        <!-- ─── LOADING ─── -->
-        <div class="loading-box" id="loadingBox">
-            <div class="load-ring"></div>
-            <div class="load-text">Optimizing your prompt…</div>
-            <div class="load-steps" id="loadSteps">
-                <div class="load-step" data-i="0">Analyzing intent &amp; structure</div>
-                <div class="load-step" data-i="1">Scanning injection risk</div>
-                <div class="load-step" data-i="2">Applying prompt dimensions</div>
-                <div class="load-step" data-i="3">Generating optimized version</div>
-            </div>
-        </div>
-
-        <!-- ─── RESULTS ─── -->
-        <div class="results-section" id="results">
-
-            <!-- 1. Optimized Prompt FIRST -->
-            <div class="section-divider"><span class="section-divider-label">Optimized Prompt</span></div>
-
-            <div id="injBadge" class="inj-badge safe">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span id="injText">No injection detected</span>
-            </div>
-
-            <div class="opt-card reveal" id="optCard">
-                <div class="opt-header">
-                    <div class="opt-header-left">
-                        <span class="opt-badge">
-                            <span class="opt-badge-dot"></span>
-                            Optimized result — ready to use
-                        </span>
-                    </div>
-                    <div class="opt-actions">
-                        <button class="act-btn" onclick="copyResult()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
-                            Copy
-                        </button>
-                        <button class="act-btn use" onclick="loadBack()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <polyline points="9 10 4 15 9 20" />
-                                <path d="M20 4v7a4 4 0 0 1-4 4H4" />
-                            </svg>
-                            Load back
-                        </button>
-                    </div>
-                </div>
-                <div class="opt-body" id="optBody"></div>
-            </div>
-
-            <!-- 2. Horizontal divider → Analysis section -->
-            <div class="section-divider" style="margin-top:32px"><span class="section-divider-label">Analysis</span>
-            </div>
-
-            <!-- Diff -->
-            <div class="diff-grid reveal" id="diffGrid" style="display:none">
-                <div class="diff-pane">
-                    <div class="diff-lbl before">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" width="10" height="10">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="15" y1="9" x2="9" y2="15" />
-                            <line x1="9" y1="9" x2="15" y2="15" />
-                        </svg>
-                        Before
-                    </div>
-                    <div class="diff-text" id="diffBefore"></div>
-                </div>
-                <div class="diff-pane">
-                    <div class="diff-lbl after">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" width="10" height="10">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        After
-                    </div>
-                    <div class="diff-text" id="diffAfter"></div>
-                </div>
-            </div>
-
-            <div class="analysis-grid" style="margin-top:14px">
-                <div class="ana-card reveal" id="cardIssues" style="display:none">
-                    <div class="ana-head">
-                        <div class="ana-icon red">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <path
-                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                <line x1="12" y1="9" x2="12" y2="13" />
-                                <line x1="12" y1="17" x2="12.01" y2="17" />
-                            </svg>
-                        </div>
-                        <span class="ana-title">Issues</span>
-                    </div>
-                    <div class="tag-wrap" id="issuesList"></div>
-                </div>
-
-                <div class="ana-card reveal" id="cardSugg" style="display:none">
-                    <div class="ana-head">
-                        <div class="ana-icon amber">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                        </div>
-                        <span class="ana-title">Suggestions</span>
-                    </div>
-                    <div class="tag-wrap" id="suggList"></div>
-                </div>
-
-                <div class="ana-card reveal" id="cardReason" style="display:none;grid-column:1/-1">
-                    <div class="ana-head">
-                        <div class="ana-icon cyan">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round">
-                                <path
-                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                                <line x1="12" y1="22.08" x2="12" y2="12" />
-                            </svg>
-                        </div>
-                        <span class="ana-title">Reasoning chain</span>
-                    </div>
-                    <ul class="steps-list" id="reasonList"></ul>
-                </div>
-            </div>
-
-        </div><!-- /results -->
-
-    </div><!-- /main -->
-
-    <footer>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12"
-            height="12" style="margin-right:5px;color:var(--accent);vertical-align:middle">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  <!-- HEADER -->
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
         </svg>
-        Promptimizer
-        <span class="sep">·</span>
-        developed by <a href="https://www.linkedin.com/in/fatma-mekawy" target="_blank" rel="noopener"><strong>Fatma
-                Mekawy</strong></a>
-    </footer>
+      </div>
+      <span class="logo-name">Prompti<em>mizer</em></span>
+    </a>
+    <div class="header-right">
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
+        <svg id="themeIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
 
-    <script>
-        const API = "https://prompt-optimizer-production-2603.up.railway.app";
+  <div class="main">
 
-        const CHECKS = [
-            { label: 'Role', test: p => /\b(you are|act as|as a|as an)\b/i.test(p) },
-            { label: 'Objective', test: p => p.length > 30 },
-            { label: 'Format', test: p => /\b(format|list|bullet|json|markdown|table|step|numbered)\b/i.test(p) },
-            { label: 'Tone', test: p => /\b(tone|formal|casual|professional|concise|detailed)\b/i.test(p) },
-            { label: 'Context', test: p => p.length > 80 },
-            { label: 'Examples', test: p => /\b(example|e\.g\.|for instance|such as)\b/i.test(p) },
-            { label: 'Constraints', test: p => /\b(avoid|do not|don't|only|must|limit|no more than)\b/i.test(p) },
-            { label: 'Step-by-step', test: p => /\b(step by step|think|reason|explain|walk me)\b/i.test(p) },
-        ];
+    <!-- HERO -->
+    <div class="hero">
+      <h1>Craft <span class="grad-text">Smarter Prompts,</span><br>Get Better Results</h1>
+      <p class="hero-sub">Type or speak your rough prompt — watch it transform into a precision-engineered instruction that unlocks the full potential of any AI model.</p>
+    </div>
 
-        function renderChecks(p) {
-            document.getElementById('checksRow').innerHTML = CHECKS.map(c => {
-                const pass = c.test(p);
-                return `<div class="check-pill ${pass ? 'pass' : ''}"><div class="check-dot"></div>${c.label}</div>`;
-            }).join('');
-        }
-        renderChecks('');
+    <!-- CHIPS -->
+    <div class="chips">
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Role &amp; persona
+      </div>
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Clear objective
+      </div>
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Output format
+      </div>
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Tone &amp; style
+      </div>
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Injection check
+      </div>
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        Voice input
+      </div>
+    </div>
 
-        function onInput(el) {
-            const n = el.value.length;
-            const cc = document.getElementById('charCt');
-            cc.textContent = n + ' chars';
-            cc.className = 'char-ct' + (n > 20 ? ' warm' : '');
-            renderChecks(el.value);
-        }
+    <!-- INPUT WRAP -->
+    <div class="input-wrap">
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tabText" onclick="switchMode('text')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Text
+        </button>
+        <button class="mode-tab" id="tabVoice" onclick="switchMode('voice')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          Voice
+        </button>
+      </div>
 
-        function showErr(msg) {
-            const b = document.getElementById('errWrap');
-            document.getElementById('errMsg').textContent = msg;
-            b.classList.add('show');
-            setTimeout(() => b.classList.remove('show'), 6000);
-        }
+      <div class="input-card" id="inputCard">
+        <div class="scan-line"></div>
+        <div class="input-topbar">
+          <span class="input-lbl" id="inputLabel">Raw prompt input</span>
+          <span class="char-ct" id="charCt">0 chars</span>
+        </div>
 
-        let loadInt;
-        function startLoad() {
-            document.getElementById('inputCard').classList.add('scanning');
-            document.getElementById('loadingBox').classList.add('show');
-            document.getElementById('forgeBtn').disabled = true;
-            document.getElementById('btnSpin').style.display = 'block';
-            document.getElementById('boltIco').style.display = 'none';
-            const steps = document.querySelectorAll('.load-step');
-            steps.forEach(s => s.classList.remove('active', 'done'));
-            let i = 0;
-            loadInt = setInterval(() => {
-                if (i > 0) steps[i - 1].classList.replace('active', 'done');
-                if (i < steps.length) { steps[i].classList.add('active'); i++; }
-            }, 700);
-        }
+        <!-- TEXT PANEL -->
+        <div class="panel-text" id="panelText">
+          <textarea id="promptInput"
+            placeholder='e.g. "write a blog post about AI" — paste your rough prompt and watch it transform...'
+            oninput="onInput(this)"></textarea>
+          <div class="checks-section">
+            <div class="checks-label">Prompt quality signals</div>
+            <div class="checks-row" id="checksRow"></div>
+          </div>
+        </div>
 
-        function stopLoad() {
-            clearInterval(loadInt);
-            document.getElementById('inputCard').classList.remove('scanning');
-            document.getElementById('loadingBox').classList.remove('show');
-            document.getElementById('forgeBtn').disabled = false;
-            document.getElementById('btnSpin').style.display = 'none';
-            document.getElementById('boltIco').style.display = 'block';
-            document.querySelectorAll('.load-step').forEach(s => s.classList.remove('active', 'done'));
-        }
+        <!-- VOICE PANEL -->
+        <div class="panel-voice" id="panelVoice">
+          <div class="voice-panel">
+            <div class="waveform" id="waveform">
+              <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+            <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Click to record">
+              <svg id="micIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+              </svg>
+            </button>
+            <div class="rec-timer" id="recTimer">● 00:00</div>
+            <div class="voice-hint" id="voiceHint">
+              <strong>Click the mic to start recording</strong><br>
+              Speak your prompt clearly — it will be transcribed and optimized
+            </div>
+            <div class="audio-preview" id="audioPreview">
+              <audio id="audioPlayer" controls></audio>
+            </div>
+            <div style="width:100%">
+              <div class="transcribed-label" id="transcribedLabel">Transcribed text</div>
+              <div class="transcribed-box" id="transcribedBox"></div>
+            </div>
+          </div>
+        </div>
 
-        async function runOptimize() {
-            const prompt = document.getElementById('promptInput').value.trim();
-            if (!prompt) { showErr('Please enter a prompt first.'); return; }
-            document.getElementById('results').classList.remove('show');
-            startLoad();
-            try {
-                const res = await fetch(`${API}/analyze`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, user_id: 'default' })
-                });
-                const data = await res.json();
-                if (!res.ok) { showErr(data.detail || 'Server error'); return; }
-                renderResults(data, prompt);
-            } catch (e) {
-                showErr('Could not reach the backend. Is the server running?');
-            } finally {
-                stopLoad();
-            }
-        }
+        <div class="input-bottombar">
+          <button class="clear-btn" onclick="clearAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Clear
+          </button>
+          <button class="optimize-btn" id="forgeBtn" onclick="runOptimize()">
+            <div class="btn-spin" id="btnSpin"></div>
+            <svg id="boltIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Optimize Prompt
+          </button>
+        </div>
+      </div>
+    </div>
 
-        function renderResults(data, originalPrompt) {
-            const inj = document.getElementById('injBadge');
-            const injTxt = document.getElementById('injText');
-            if (data.is_injection) {
-                inj.className = 'inj-badge danger';
-                inj.querySelector('svg').innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
-                injTxt.textContent = 'Injection risk detected';
-            } else {
-                inj.className = 'inj-badge safe';
-                inj.querySelector('svg').innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-                injTxt.textContent = 'No injection detected';
-            }
+    <!-- ERROR -->
+    <div class="err-wrap" id="errWrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errMsg">Something went wrong.</span>
+    </div>
 
-            const improved = data.improved_prompt || '';
-            document.getElementById('optBody').textContent = improved;
+    <!-- LOADING -->
+    <div class="loading-box" id="loadingBox">
+      <div class="load-ring"></div>
+      <div class="load-text" id="loadText">Optimizing your prompt…</div>
+      <div class="load-steps" id="loadSteps">
+        <div class="load-step" data-i="0">Analyzing intent &amp; structure</div>
+        <div class="load-step" data-i="1">Scanning injection risk</div>
+        <div class="load-step" data-i="2">Applying prompt dimensions</div>
+        <div class="load-step" data-i="3">Generating optimized version</div>
+      </div>
+    </div>
 
-            if (improved && originalPrompt) {
-                const dg = document.getElementById('diffGrid');
-                dg.style.display = '';
-                document.getElementById('diffBefore').textContent = originalPrompt;
-                document.getElementById('diffAfter').textContent = improved;
-            }
+    <!-- RESULTS -->
+    <div class="results-section" id="results">
 
-            const issues = data.issues || [];
-            if (issues.length) {
-                document.getElementById('cardIssues').style.display = '';
-                document.getElementById('issuesList').innerHTML = issues.map(i => `<span class="tag issue">${i}</span>`).join('');
-            }
+      <!-- Voice transcription notice -->
+      <div class="transcription-notice" id="transcriptionNotice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+        </svg>
+        <div>
+          <div class="transcription-notice-label">Voice transcription</div>
+          <div class="transcription-notice-text" id="transcriptionText"></div>
+        </div>
+      </div>
 
-            const suggs = data.suggestions || [];
-            if (suggs.length) {
-                document.getElementById('cardSugg').style.display = '';
-                document.getElementById('suggList').innerHTML = suggs.map(s => `<span class="tag sugg">${s}</span>`).join('');
-            }
+      <!-- 1. Optimized Prompt -->
+      <div class="section-divider"><span class="section-divider-label">Optimized Prompt</span></div>
 
-            const steps = data.reasoning_steps || [];
-            if (steps.length) {
-                document.getElementById('cardReason').style.display = '';
-                document.getElementById('reasonList').innerHTML = steps.map(s => `<li>${s}</li>`).join('');
-            }
+      <div id="injBadge" class="inj-badge safe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="injText">No injection detected</span>
+      </div>
 
-            document.getElementById('results').classList.add('show');
-            setTimeout(() => {
-                document.querySelectorAll('.reveal').forEach((el, i) => {
-                    setTimeout(() => el.classList.add('visible'), i * 90);
-                });
-                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 60);
-        }
+      <div class="opt-card reveal" id="optCard">
+        <div class="opt-header">
+          <span class="opt-badge"><span class="opt-badge-dot"></span>Optimized result — ready to use</span>
+          <div class="opt-actions">
+            <button class="act-btn" onclick="copyResult()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <button class="act-btn use" onclick="loadBack()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+              Load back
+            </button>
+          </div>
+        </div>
+        <div class="opt-body" id="optBody"></div>
+      </div>
 
-        function clearAll() {
-            document.getElementById('promptInput').value = '';
-            onInput(document.getElementById('promptInput'));
-            document.getElementById('results').classList.remove('show');
-            document.getElementById('errWrap').classList.remove('show');
-            document.querySelectorAll('.reveal').forEach(el => el.classList.remove('visible'));
-            ['cardIssues', 'cardSugg', 'cardReason', 'diffGrid'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-        }
+      <!-- 2. Analysis -->
+      <div class="section-divider" style="margin-top:32px"><span class="section-divider-label">Analysis</span></div>
 
-        function copyResult() {
-            navigator.clipboard.writeText(document.getElementById('optBody').textContent).then(() => {
-                const btn = event.currentTarget;
-                const orig = btn.innerHTML;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-                setTimeout(() => btn.innerHTML = orig, 2000);
-            });
-        }
+      <div class="analysis-grid">
+        <div class="ana-card reveal" id="cardIssues" style="display:none">
+          <div class="ana-head">
+            <div class="ana-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <span class="ana-title">Issues</span>
+          </div>
+          <div class="tag-wrap" id="issuesList"></div>
+        </div>
+        <div class="ana-card reveal" id="cardSugg" style="display:none">
+          <div class="ana-head">
+            <div class="ana-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <span class="ana-title">Suggestions</span>
+          </div>
+          <div class="tag-wrap" id="suggList"></div>
+        </div>
+        <div class="ana-card reveal" id="cardReason" style="display:none;grid-column:1/-1">
+          <div class="ana-head">
+            <div class="ana-icon cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <span class="ana-title">Reasoning chain</span>
+          </div>
+          <ul class="steps-list" id="reasonList"></ul>
+        </div>
+      </div>
 
-        function loadBack() {
-            const ta = document.getElementById('promptInput');
-            ta.value = document.getElementById('optBody').textContent;
-            onInput(ta);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    </div>
+  </div>
 
-        let isLight = false;
-        function toggleTheme() {
-            isLight = !isLight;
-            document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
-            const ico = document.getElementById('themeIco');
-            if (isLight) {
-                ico.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
-            } else {
-                ico.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-            }
-        }
+  <footer>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12" style="margin-right:5px;color:var(--accent);vertical-align:middle"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Promptimizer
+    <span class="sep">·</span>
+    developed by <a href="https://www.linkedin.com/in/fatmamekawy/" target="_blank" rel="noopener"><strong>Fatma Mekawy</strong></a>
+  </footer>
 
-        document.addEventListener('keydown', e => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runOptimize();
+  <script>
+    const API = "https://prompt-optimizer-production-2603.up.railway.app";
+
+    let currentMode = 'text';
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedBlob = null;
+    let recTimerInterval = null;
+    let recSeconds = 0;
+
+    // ── QUALITY CHECKS ──
+    const CHECKS = [
+      { label:'Role',         test: p => /\b(you are|act as|as a|as an)\b/i.test(p) },
+      { label:'Objective',    test: p => p.length > 30 },
+      { label:'Format',       test: p => /\b(format|list|bullet|json|markdown|table|step|numbered)\b/i.test(p) },
+      { label:'Tone',         test: p => /\b(tone|formal|casual|professional|concise|detailed)\b/i.test(p) },
+      { label:'Context',      test: p => p.length > 80 },
+      { label:'Examples',     test: p => /\b(example|e\.g\.|for instance|such as)\b/i.test(p) },
+      { label:'Constraints',  test: p => /\b(avoid|do not|don't|only|must|limit|no more than)\b/i.test(p) },
+      { label:'Step-by-step', test: p => /\b(step by step|think|reason|explain|walk me)\b/i.test(p) },
+    ];
+
+    function renderChecks(p) {
+      document.getElementById('checksRow').innerHTML = CHECKS.map(c => {
+        const pass = c.test(p);
+        return `<div class="check-pill ${pass?'pass':''}"><div class="check-dot"></div>${c.label}</div>`;
+      }).join('');
+    }
+    renderChecks('');
+
+    function onInput(el) {
+      const n = el.value.length;
+      const cc = document.getElementById('charCt');
+      cc.textContent = n + ' chars';
+      cc.className = 'char-ct' + (n > 20 ? ' warm' : '');
+      renderChecks(el.value);
+    }
+
+    // ── MODE SWITCH ──
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabText').classList.toggle('active', mode === 'text');
+      document.getElementById('tabVoice').classList.toggle('active', mode === 'voice');
+      document.getElementById('panelText').style.display  = mode === 'text'  ? 'block' : 'none';
+      document.getElementById('panelVoice').style.display = mode === 'voice' ? 'block' : 'none';
+      document.getElementById('inputLabel').textContent   = mode === 'text'  ? 'Raw prompt input' : 'Voice prompt input';
+      document.getElementById('charCt').style.display     = mode === 'text'  ? '' : 'none';
+    }
+
+    // ── VOICE ──
+    async function toggleRecording() {
+      if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        await startRecording();
+      } else {
+        stopRecording();
+      }
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        recordedBlob = null;
+        document.getElementById('transcribedBox').style.display = 'none';
+        document.getElementById('transcribedLabel').style.display = 'none';
+        document.getElementById('audioPreview').classList.remove('show');
+
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = onRecordingStopped;
+        mediaRecorder.start();
+
+        document.getElementById('micBtn').classList.add('recording');
+        document.getElementById('waveform').classList.add('active');
+        document.getElementById('voiceHint').innerHTML = '<strong>Recording…</strong><br>Click the mic again to stop';
+        document.getElementById('recTimer').classList.add('active');
+        recSeconds = 0; updateTimer();
+        recTimerInterval = setInterval(updateTimer, 1000);
+      } catch(err) {
+        showErr('Microphone access denied. Please allow microphone permissions.');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+      clearInterval(recTimerInterval);
+      document.getElementById('micBtn').classList.remove('recording');
+      document.getElementById('waveform').classList.remove('active');
+      document.getElementById('recTimer').classList.remove('active');
+      document.getElementById('voiceHint').innerHTML = '<strong>Recording stopped</strong><br>Processing audio…';
+    }
+
+    function onRecordingStopped() {
+      recordedBlob = new Blob(audioChunks, { type:'audio/webm' });
+      const url = URL.createObjectURL(recordedBlob);
+      document.getElementById('audioPlayer').src = url;
+      document.getElementById('audioPreview').classList.add('show');
+      document.getElementById('voiceHint').innerHTML = '<strong>Ready to optimize</strong><br>Click "Optimize Prompt" to transcribe and analyze';
+    }
+
+    function updateTimer() {
+      const m = String(Math.floor(recSeconds/60)).padStart(2,'0');
+      const s = String(recSeconds%60).padStart(2,'0');
+      document.getElementById('recTimer').textContent = `● ${m}:${s}`;
+      recSeconds++;
+    }
+
+    // ── ERROR / LOADING ──
+    function showErr(msg) {
+      const b = document.getElementById('errWrap');
+      document.getElementById('errMsg').textContent = msg;
+      b.classList.add('show');
+      setTimeout(() => b.classList.remove('show'), 7000);
+    }
+
+    let loadInt;
+    function startLoad(isVoice) {
+      document.getElementById('inputCard').classList.add('scanning');
+      document.getElementById('loadingBox').classList.add('show');
+      document.getElementById('forgeBtn').disabled = true;
+      document.getElementById('btnSpin').style.display = 'block';
+      document.getElementById('boltIco').style.display = 'none';
+      document.getElementById('loadText').textContent = isVoice ? 'Transcribing & optimizing…' : 'Optimizing your prompt…';
+      const steps = document.querySelectorAll('.load-step');
+      steps.forEach(s => s.classList.remove('active','done'));
+      let i = 0;
+      loadInt = setInterval(() => {
+        if (i > 0) steps[i-1].classList.replace('active','done');
+        if (i < steps.length) { steps[i].classList.add('active'); i++; }
+      }, 700);
+    }
+
+    function stopLoad() {
+      clearInterval(loadInt);
+      document.getElementById('inputCard').classList.remove('scanning');
+      document.getElementById('loadingBox').classList.remove('show');
+      document.getElementById('forgeBtn').disabled = false;
+      document.getElementById('btnSpin').style.display = 'none';
+      document.getElementById('boltIco').style.display = 'block';
+      document.querySelectorAll('.load-step').forEach(s => s.classList.remove('active','done'));
+    }
+
+    // ── OPTIMIZE ──
+    async function runOptimize() {
+      document.getElementById('results').classList.remove('show');
+      if (currentMode === 'voice') { await runVoiceOptimize(); }
+      else { await runTextOptimize(); }
+    }
+
+    async function runTextOptimize() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) { showErr('Please enter a prompt first.'); return; }
+      startLoad(false);
+      try {
+        const res = await fetch(`${API}/analyze`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ prompt, user_id:'default' })
         });
-    </script>
-</body>
+        const data = await res.json();
+        if (!res.ok) { showErr(data.detail || 'Server error'); return; }
+        renderResults(data, null);
+      } catch(e) {
+        showErr('Could not reach the backend. Is the server running?');
+      } finally { stopLoad(); }
+    }
 
+    async function runVoiceOptimize() {
+      if (!recordedBlob) { showErr('Please record your voice prompt first.'); return; }
+      startLoad(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', recordedBlob, 'recording.webm');
+        formData.append('user_id', 'default');
+        const res = await fetch(`${API}/analyze/voice`, { method:'POST', body:formData });
+        const data = await res.json();
+        if (!res.ok) { showErr(data.detail || 'Voice analysis error'); return; }
+        if (data.transcribed_text) {
+          const box = document.getElementById('transcribedBox');
+          box.textContent = data.transcribed_text;
+          box.style.display = 'block';
+          document.getElementById('transcribedLabel').style.display = 'block';
+          document.getElementById('voiceHint').innerHTML = '<strong>Transcription complete ✓</strong><br>Your optimized prompt is shown below';
+        }
+        renderResults(data, data.transcribed_text);
+      } catch(e) {
+        showErr('Could not reach the backend. Is the server running?');
+      } finally { stopLoad(); }
+    }
+
+    // ── RENDER RESULTS ──
+    function renderResults(data, transcribedText) {
+      const notice = document.getElementById('transcriptionNotice');
+      if (transcribedText) {
+        document.getElementById('transcriptionText').textContent = transcribedText;
+        notice.classList.add('show');
+      } else {
+        notice.classList.remove('show');
+      }
+
+      const inj = document.getElementById('injBadge');
+      if (data.is_injection) {
+        inj.className = 'inj-badge danger';
+        inj.querySelector('svg').innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+        document.getElementById('injText').textContent = 'Injection risk detected';
+      } else {
+        inj.className = 'inj-badge safe';
+        inj.querySelector('svg').innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+        document.getElementById('injText').textContent = 'No injection detected';
+      }
+
+      document.getElementById('optBody').textContent = data.improved_prompt || '';
+
+      const issues = data.issues || [];
+      if (issues.length) {
+        document.getElementById('cardIssues').style.display = '';
+        document.getElementById('issuesList').innerHTML = issues.map(i => `<span class="tag issue">${i}</span>`).join('');
+      }
+      const suggs = data.suggestions || [];
+      if (suggs.length) {
+        document.getElementById('cardSugg').style.display = '';
+        document.getElementById('suggList').innerHTML = suggs.map(s => `<span class="tag sugg">${s}</span>`).join('');
+      }
+      const steps = data.reasoning_steps || [];
+      if (steps.length) {
+        document.getElementById('cardReason').style.display = '';
+        document.getElementById('reasonList').innerHTML = steps.map(s => `<li>${s}</li>`).join('');
+      }
+
+      document.getElementById('results').classList.add('show');
+      setTimeout(() => {
+        document.querySelectorAll('.reveal').forEach((el,i) => setTimeout(() => el.classList.add('visible'), i*90));
+        document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+      }, 60);
+    }
+
+    // ── CLEAR ──
+    function clearAll() {
+      document.getElementById('promptInput').value = '';
+      onInput(document.getElementById('promptInput'));
+      recordedBlob = null; audioChunks = [];
+      document.getElementById('transcribedBox').style.display = 'none';
+      document.getElementById('transcribedLabel').style.display = 'none';
+      document.getElementById('audioPreview').classList.remove('show');
+      document.getElementById('voiceHint').innerHTML = '<strong>Click the mic to start recording</strong><br>Speak your prompt clearly — it will be transcribed and optimized';
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      document.getElementById('micBtn').classList.remove('recording');
+      document.getElementById('waveform').classList.remove('active');
+      document.getElementById('recTimer').classList.remove('active');
+      clearInterval(recTimerInterval);
+      document.getElementById('results').classList.remove('show');
+      document.getElementById('errWrap').classList.remove('show');
+      document.querySelectorAll('.reveal').forEach(el => el.classList.remove('visible'));
+      ['cardIssues','cardSugg','cardReason'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+    }
+
+    function copyResult() {
+      navigator.clipboard.writeText(document.getElementById('optBody').textContent).then(() => {
+        const btn = event.currentTarget, orig = btn.innerHTML;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        setTimeout(() => btn.innerHTML = orig, 2000);
+      });
+    }
+
+    function loadBack() {
+      const text = document.getElementById('optBody').textContent;
+      switchMode('text');
+      const ta = document.getElementById('promptInput');
+      ta.value = text; onInput(ta);
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+
+    let isLight = false;
+    function toggleTheme() {
+      isLight = !isLight;
+      document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      const ico = document.getElementById('themeIco');
+      if (isLight) {
+        ico.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+      } else {
+        ico.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runOptimize();
+    });
+  </script>
+</body>
 </html>
