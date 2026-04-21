@@ -636,6 +636,16 @@
             height: 6px;
         }
 
+        .act-btn.copied {
+            border-color: var(--green);
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .act-btn.copied svg {
+            color: var(--green);
+        }
+
         .wave-bar:nth-child(2) {
             animation-delay: .08s
         }
@@ -1591,7 +1601,7 @@
                 <div class="opt-header">
                     <span class="opt-badge"><span class="opt-badge-dot"></span>Optimized result — ready to use</span>
                     <div class="opt-actions">
-                        <button class="act-btn" onclick="copyResult()">
+                        <button class="act-btn" onclick="copyResult(event)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 stroke-linecap="round">
                                 <rect x="9" y="9" width="13" height="13" rx="2" />
@@ -1937,11 +1947,29 @@
             });
         }
 
-        function copyResult() {
-            navigator.clipboard.writeText(document.getElementById('optBody').textContent).then(() => {
-                const btn = event.currentTarget, orig = btn.innerHTML;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-                setTimeout(() => btn.innerHTML = orig, 2000);
+        function copyResult(event) {
+            const btn = event.currentTarget;
+            const text = document.getElementById('optBody').textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+
+                // Save original state
+                const originalHTML = btn.innerHTML;
+
+                // Change UI
+                btn.classList.add('copied');
+                btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Copied
+        `;
+
+                // Reset after 2 sec
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = originalHTML;
+                }, 2000);
             });
         }
 
